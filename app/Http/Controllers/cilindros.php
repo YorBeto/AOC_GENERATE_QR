@@ -28,7 +28,7 @@ public function store(Request $request)
         'fecha_recepcion' => 'required|date',
         'fecha_registro' => 'required|date',
         'url_ficha' => 'nullable|file|mimes:pdf|max:5120', 
-        'QR_code' => 'nullable|string|max:255'
+        'QR_code' => 'nullable|string'
     ]);
 
     if ($validator->fails()) {
@@ -115,9 +115,27 @@ public function store(Request $request)
             ], 404);
         }
 
+        
+
         return response()->json([
             'status' => 'success',
-            'data' => $cilindro
+            'data' => [
+                'numero_serie' => $cilindro->numero_serie,
+                'fecha_recepcion' => $cilindro->fecha_recepcion,
+                'fecha_registro' => $cilindro->fecha_registro,
+                'url_ficha' => $cilindro->url_ficha,
+                'QR_code' => $cilindro->QR_code,
+                'estado' => $cilindro->estado
+            ]
         ],200);
     }
+
+            public function updateQr(Request $req, $numero)
+        {
+            $cil = Cilindro::where('numero_serie', $numero)->firstOrFail();
+            $cil->QR_code = $req->input('QR_code');
+            $cil->save();
+            return response()->json(['status'=>'success'],200);
+        }
+
 }

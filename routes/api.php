@@ -22,3 +22,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::get('/cilindros', [cilindros::class, 'index']);
 Route::post('/cilindros', [cilindros::class, 'store']);
 Route::get('/cilindros/{numero_serie}', [cilindros::class, 'show']);
+Route::post('/cilindros/{numero}/qr', [cilindros::class, 'updateQr']);
