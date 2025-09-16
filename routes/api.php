@@ -23,3 +23,10 @@ Route::get('/cilindros', [cilindros::class, 'index']);
 Route::post('/cilindros', [cilindros::class, 'store']);
 Route::get('/cilindros/{numero_serie}', [cilindros::class, 'show']);
 Route::post('/cilindros/{numero}/qr', [cilindros::class, 'updateQr']);
+
+
+Route::get('/dashboard/total',[cilindros::class, 'totalCilindros']);
+Route::get('/dashboard/proximos-caducar',[cilindros::class, 'proxCaducidad']);
+Route::get('/dashboard/registros-mensuales',[cilindros::class, 'RegistrosMensuales']);
+Route::get('/dashboard/ultimos-registros',[cilindros::class, 'UltimosRegistros']);
+Route::get('/dashboard/sin-ficha',[cilindros::class, 'sinFicha']);

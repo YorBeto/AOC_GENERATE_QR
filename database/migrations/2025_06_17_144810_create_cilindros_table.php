@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('numero_serie', 25)->unique();
             $table->date('fecha_recepcion');
             $table->date('fecha_registro');
+            $table->date('fecha_caducidad')->nullable();
             $table->string('url_ficha')->nullable();
             $table->binary('QR_code')->nullable();
             $table->enum('estado', ['activo', 'inactivo'])->default('activo');

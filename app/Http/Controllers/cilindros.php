@@ -16,7 +16,16 @@ class cilindros extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data' => $cilindros
+            'data' => $cilindros->map(function ($cilindro) {
+                return [
+                    'numero_serie' => $cilindro->numero_serie,
+                    'fecha_recepcion' => $cilindro->fecha_recepcion,
+                    'fecha_registro' => $cilindro->fecha_registro,
+                    'fecha_caducidad' => $cilindro->fecha_caducidad,
+                    'url_ficha' => $cilindro->url_ficha,
+                    'estado' => $cilindro->estado
+                ];
+            })
         ],200);
     }
 
@@ -27,7 +36,8 @@ public function store(Request $request)
         'numero_serie' => 'required|string|max:25',
         'fecha_recepcion' => 'required|date',
         'fecha_registro' => 'required|date',
-        'url_ficha' => 'nullable|file|mimes:pdf|max:5120', 
+        'fecha_caducidad' => 'nullable|date',
+        'url_ficha' => 'nullable|file|mimes:pdf|max:5120',
         'QR_code' => 'nullable|string'
     ]);
 
@@ -92,6 +102,7 @@ public function store(Request $request)
     $cilindro->numero_serie = $request->numero_serie;
     $cilindro->fecha_recepcion = $request->fecha_recepcion;
     $cilindro->fecha_registro = $request->fecha_registro;
+    $cilindro->fecha_caducidad = $request->fecha_caducidad;
     $cilindro->url_ficha = $urlPublica;
     $cilindro->QR_code = $request->QR_code;
     $cilindro->estado = 'activo';
@@ -123,6 +134,7 @@ public function store(Request $request)
                 'numero_serie' => $cilindro->numero_serie,
                 'fecha_recepcion' => $cilindro->fecha_recepcion,
                 'fecha_registro' => $cilindro->fecha_registro,
+                'fecha_caducidad' => $cilindro->fecha_caducidad,
                 'url_ficha' => $cilindro->url_ficha,
                 'QR_code' => $cilindro->QR_code,
                 'estado' => $cilindro->estado
@@ -130,12 +142,61 @@ public function store(Request $request)
         ],200);
     }
 
-            public function updateQr(Request $req, $numero)
+        public function updateQr(Request $req, $numero)
         {
             $cil = Cilindro::where('numero_serie', $numero)->firstOrFail();
             $cil->QR_code = $req->input('QR_code');
             $cil->save();
             return response()->json(['status'=>'success'],200);
         }
+
+        public function totalCilindros(){
+            $total = Cilindro::count();
+            return response()->json(['total_cilindros' => $total], 200);
+        }
+
+        public function proxCaducidad()
+        {
+            $hoy = now();
+            $limite = now()->addDays(30);
+
+            $prox = Cilindro::whereBetween('fecha_caducidad', [$hoy, $limite])
+                            ->where('estado', 'activo')
+                            ->orderBy('fecha_caducidad', 'asc')
+                            ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'total' => $prox->count(),
+                'data' => $prox
+            ], 200);
+        }
+
+        public function RegistrosMensuales(){
+            $registros = Cilindro::select(
+                    DB::raw('COUNT(*) as total'),
+                    DB::raw('MONTH(fecha_recepcion) as mes'),
+                    DB::raw('DATE_FORMAT(fecha_recepcion, "%M") as nombre_mes')
+                )
+                ->groupBy('mes', 'nombre_mes')
+                ->orderBy('mes', 'asc')
+                ->get();
+
+            return response()->json(['status' => 'success', 'data' => $registros], 200);
+        }
+
+        public function UltimosRegistros()
+        {
+            $ultimos = Cilindro::orderBy('fecha_recepcion', 'desc')
+                ->take(5)
+                ->get(['id', 'numero_serie', 'fecha_registro', 'estado']);
+
+            return response()->json(['status' => 'success', 'data' => $ultimos], 200);
+        }
+
+        public function sinFicha() {
+        $total = Cilindro::whereNull('url_ficha')->count();
+        return response()->json(['sin_ficha' => $total], 200);
+    }
 
 }
